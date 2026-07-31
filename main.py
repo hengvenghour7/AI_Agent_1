@@ -1,6 +1,7 @@
 from groq import Groq
 from dotenv import load_dotenv
 import os
+import json
 
 load_dotenv()
 
@@ -16,6 +17,7 @@ input_msg = [
         Available tools:
         - banner_is: checks banner status
         - friendly_reminder: gives a reminder message
+        _ read_file: return what contain inside the file
 
         Rules:
         - Only call tools listed above.
@@ -30,11 +32,13 @@ input_msg = [
 # )
 
 # print(response.choices[0].message.content)
-
+def read_file(file_path):
+    with open(file_path, "r") as f:
+        return f.read()
 def banner_is():
     print("hiikkkking")
     return "Banner is finished"
-def firendly_reminder():
+def friendly_reminder():
     print("Don't forget to take your umbrella out")
 tools = [
     {
@@ -58,7 +62,25 @@ tools = [
                 "properties": {}
             }
         }
-    }
+    },
+    {
+            "type": "function",
+            "function": {
+                "name": "read_file",
+                "description": "return what is inside the file",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "file_path": {
+                            "type": "string",
+                            "description": "The path to the file to read."
+                        }
+                    },
+                    "required": ["file_path"],
+                    "additionalProperties": False
+                }
+            }
+        }
 ]
 while True:
     user_input = input("User input: ")
@@ -85,9 +107,26 @@ while True:
         print("tool has been called")
         for tool in reply.tool_calls:
             if tool.function.name == "banner_is":
-                banner_is()
-            if tool.function.name == "firendly_reminder":
-                firendly_reminder()
+                print(banner_is())
+            if tool.function.name == "friendly_reminder":
+                friendly_reminder()
+            if tool.function.name == "read_file":
+                args = json.loads(tool.function.arguments)
+                result = read_file(args["file_path"])
+                input_msg.append(reply)
+                input_msg.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": tool.id,
+                        "content": result,
+                    }
+                )
+                final = client.chat.completions.create(
+                    model="llama-3.1-8b-instant",
+                    messages=input_msg,
+                )
+
+                print(final.choices[0].message.content)
         print("__calling__")
         print(reply.content)
     else:
