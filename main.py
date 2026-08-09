@@ -40,12 +40,17 @@ def banner_is():
     return "Banner is finished"
 def friendly_reminder():
     print("Don't forget to take your umbrella out")
+available_tools = {
+    "read_file": read_file,
+    "friendly_reminder": friendly_reminder,
+    "banner_is": banner_is
+}
 tools = [
     {
         "type": "function",
         "function": {
             "name": "banner_is",
-            "description": "Prints a test message.",
+            "description": "This tool take no argument",
             "parameters": {
                 "type": "object",
                 "properties": {}
@@ -55,7 +60,7 @@ tools = [
     {
         "type": "function",
         "function": {
-            "name": "firendly_reminder",
+            "name": "friendly_reminder",
             "description": "Prints a test message.",
             "parameters": {
                 "type": "object",
@@ -89,46 +94,58 @@ while True:
         "role": "user",
         "content": user_input
     })
-    new_response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=input_msg,
-        tools=tools
-    )
+    try:
+        new_response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=input_msg,
+            tools=tools
+        )
+    except Exception as e:
+        print(f"Prompt error {e}")
+        continue
     reply = new_response.choices[0].message
     
     print(f"message len {len(input_msg)}")
     if len(input_msg) > 12:
         print(f"exceed the limit now {len(input_msg)}")
         input_msg = input_msg[-12:]
-    array_1 = [0, 1, 2, 3, 4]
-    array_1.append(3)
-    print(array_1)
     if reply.tool_calls:
         print("tool has been called")
-        for tool in reply.tool_calls:
-            if tool.function.name == "banner_is":
-                print(banner_is())
-            if tool.function.name == "friendly_reminder":
-                friendly_reminder()
-            if tool.function.name == "read_file":
+        print(f"fadsf {reply.tool_calls}")
+        res = ""
+        try:
+            for tool in reply.tool_calls:
+                function = available_tools[tool.function.name]
                 args = json.loads(tool.function.arguments)
-                result = read_file(args["file_path"])
-                input_msg.append(reply)
-                input_msg.append(
-                    {
-                        "role": "tool",
-                        "tool_call_id": tool.id,
-                        "content": result,
-                    }
-                )
-                final = client.chat.completions.create(
-                    model="llama-3.1-8b-instant",
-                    messages=input_msg,
-                )
-
-                print(final.choices[0].message.content)
+                if args is None:
+                    args = {}
+                res = function(**args)
+                # if res is not None:
+                #     print(res)
+                # print(final.choices[0].message.content)
+                
+        except Exception as e:
+            print(f"error {e}")
+        if res is not None:
+            input_msg.append({
+                                "role": "tool",
+                                "tool_call_id": tool.id,
+                                "content": res
+                            })
         print("__calling__")
-        print(reply.content)
+        try:
+            final_response = client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=input_msg,
+                tools=tools
+            )
+            input_msg.append({
+                        "role": "assistant",
+                        "content": final_response.choices[0].message.content
+                    })
+            print(final_response.choices[0].message.content)
+        except Exception as e:
+            print(f"another error {e}")
     else:
         input_msg.append({
             "role": "assistant",
