@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 import json
 from pathlib import Path
+from groq.types.chat import ChatCompletionMessage
 
 load_dotenv()
 CURRENT_DIR = Path.cwd().resolve()
@@ -51,6 +52,33 @@ def banner_is():
     return "Banner is finished"
 def friendly_reminder():
     print("Don't forget to take your umbrella out")
+def execute_AI_tool(response: ChatCompletionMessage) -> None:
+    if not response.tool_calls:
+        return
+    
+    input_msg.append(response)
+    result = None
+    try:
+        for tool in response.tool_calls:
+            function = available_tools[tool.function.name]
+            args = json.loads(tool.function.arguments)
+            result = function(**args)
+        if result is not None:
+                input_msg.append({
+                    "role": "tool",
+                    "tool_call_id": tool.id,
+                    "content": str(result)
+                })
+        second_response = client.chat.completions.create(
+                        model="openai/gpt-oss-20b",
+                        messages=input_msg,
+                        tools=tools
+                    )
+    except Exception as e:
+        print(f"error {e}")
+    
+    execute_AI_tool(second_response.choices[0].message)
+
 available_tools = {
     "read_file": read_file,
     "friendly_reminder": friendly_reminder,
@@ -147,55 +175,15 @@ while True:
     
     if len(input_msg) > 12:
         input_msg = input_msg[-12:]
-    if reply.tool_calls:
-        print(f"reppply {reply}")
-        input_msg.append(reply)
-        res = ""
-        try:
-            for tool in reply.tool_calls:
-                function = available_tools[tool.function.name]
-                args = json.loads(tool.function.arguments)
-                print(args)
-                if args is None:
-                    args = {}
-                res = function(**args)
-                # if res is not None:
-                #     print(res)
-                # print(final.choices[0].message.content)
-                
-        except Exception as e:
-            print(tool.function.arguments)
-            print(f"error {e}")
-        if res is not None:
-            input_msg.append({
-                                "role": "tool",
-                                "tool_call_id": tool.id,
-                                "content": str(res)
-                            })
-        print("__calling__")
-        try:
-            final_response = client.chat.completions.create(
-                model="openai/gpt-oss-20b",
-                messages=input_msg,
-                tools=tools
-            )
-            final_reply = final_response.choices[0].message
-            if (final_reply.tool_calls):
-                print("second tool call")
-                for tool in final_reply.tool_calls:
-                    args2 = json.loads(tool.function.arguments)
-                    available_tools[tool.function.name](**args2)
-            print(f"finalll response {final_response}")
-            final_reply = final_response.choices[0].message
-            input_msg.append(final_reply)
-            print(f"testing response {final_response.choices[0].message}")
-            if final_response.choices[0].message.content is None:
-                print("message is None")
-        except Exception as e:
-            print(f"another error {e}")
-    else:
-        input_msg.append({
-            "role": "assistant",
-            "content": reply.content
-        })
-        print(reply.content)
+    execute_AI_tool(reply)
+    # print(f"finalll response {final_response}")
+    # final_reply = final_response.choices[0].message
+    # input_msg.append(final_reply)
+    # print(f"testing response {final_response.choices[0].message}")
+    # if final_response.choices[0].message.content is None:
+    #     print("message is None")
+    input_msg.append({
+        "role": "assistant",
+        "content": reply.content
+    })
+    print(reply.content)
