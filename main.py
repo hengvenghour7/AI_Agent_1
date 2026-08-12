@@ -179,6 +179,12 @@ while True:
                 messages=input_msg,
                 tools=tools
             )
+            final_reply = final_response.choices[0].message
+            if (final_reply.tool_calls):
+                print("second tool call")
+                for tool in final_reply.tool_calls:
+                    args2 = json.loads(tool.function.arguments)
+                    available_tools[tool.function.name](**args2)
             print(f"finalll response {final_response}")
             final_reply = final_response.choices[0].message
             input_msg.append(final_reply)
