@@ -1,9 +1,11 @@
+from typing import List
+
 from groq import Groq
 from dotenv import load_dotenv
 import os
 import json
 from pathlib import Path
-from groq.types.chat import ChatCompletionMessage
+from groq.types.chat import ChatCompletionMessage, ChatCompletionMessageToolCall
 
 load_dotenv()
 CURRENT_DIR = Path.cwd().resolve()
@@ -11,7 +13,7 @@ CURRENT_DIR = Path.cwd().resolve()
 client = Groq(
     api_key=os.getenv("GROQ_API_KEY")
 )
-input_msg = [
+messages = [
     {
         "role": "system",
         "content": """
@@ -32,7 +34,7 @@ input_msg = [
 ]
 # response = client.chat.completions.create(
 #     model="openai/gpt-oss-20b",
-#     messages = input_msg
+#     messages = messages
 # )
 
 # print(response.choices[0].message.content)
@@ -52,32 +54,48 @@ def banner_is():
     return "Banner is finished"
 def friendly_reminder():
     print("Don't forget to take your umbrella out")
-def execute_AI_tool(response: ChatCompletionMessage) -> None:
-    if not response.tool_calls:
-        return
+def execute_AI_tool(tool_calls: List[ChatCompletionMessageToolCall]) -> None:
+    for tool in tool_calls:
+        function = available_tools[tool.function.name]
+        args = json.loads(tool.function.arguments)
+        result = function(**args)
+        messages.append({
+            "role": "tool",
+            "tool_call_id": tool.id,
+            "content": str(result)
+        })
+
+
+
+
+    # if not response.tool_calls:
+    #     return
     
-    input_msg.append(response)
-    result = None
-    try:
-        for tool in response.tool_calls:
-            function = available_tools[tool.function.name]
-            args = json.loads(tool.function.arguments)
-            result = function(**args)
-        if result is not None:
-                input_msg.append({
-                    "role": "tool",
-                    "tool_call_id": tool.id,
-                    "content": str(result)
-                })
-        second_response = client.chat.completions.create(
-                        model="openai/gpt-oss-20b",
-                        messages=input_msg,
-                        tools=tools
-                    )
-    except Exception as e:
-        print(f"error {e}")
-    
-    execute_AI_tool(second_response.choices[0].message)
+    # messages.append(response)
+    # result = None
+    # try:
+    #     for tool in response.tool_calls:
+    #         function = available_tools[tool.function.name]
+    #         args = json.loads(tool.function.arguments)
+    #         result = function(**args)
+    #     if result is not None:
+    #             messages.append({
+    #                 "role": "tool",
+    #                 "tool_call_id": tool.id,
+    #                 "content": str(result)
+    #             })
+    #     second_response = client.chat.completions.create(
+    #                     model="openai/gpt-oss-20b",
+    #                     messages=messages,
+    #                     tools=tools
+    #                 )
+    # except Exception as e:
+    #     print(f"error {e}")
+    # try:
+    #     print(second_response)
+    #     execute_AI_tool(second_response.choices[0].message)
+    # except Exception as e:
+    #     print(f"second error {e}")
 
 available_tools = {
     "read_file": read_file,
@@ -158,32 +176,80 @@ tools = [
 while True:
     user_input = input("User input: ")
     print("_______________________")
-    input_msg.append({
+    messages.append({
         "role": "user",
         "content": user_input
     })
     try:
         new_response = client.chat.completions.create(
             model="openai/gpt-oss-20b",
-            messages=input_msg,
+            messages=messages,
             tools=tools
         )
     except Exception as e:
         print(f"Prompt error {e}")
         continue
     reply = new_response.choices[0].message
+
+    assistant_message = {
+        "role": "assistant",
+        "content": reply.content,
+    }
+
+    if reply.tool_calls:
+        assistant_message["tool_calls"] = [
+            {
+                "id": tool.id,
+                "type": "function",
+                "function": {
+                    "name": tool.function.name,
+                    "arguments": tool.function.arguments,
+                },
+            }
+            for tool in reply.tool_calls
+        ]
+
+    messages.append(assistant_message)  
+
+        
+    if reply.tool_calls:
+        execute_AI_tool(reply.tool_calls)
+
+        # Ask the AI what to say after seeing the tool result
+        try:
+            second_response = client.chat.completions.create(
+                model="openai/gpt-oss-20b",
+                messages=messages,
+                tools=tools
+            )
+        except Exception as e:
+            print(f"Second request error: {e}")
+            continue
+
+        second_reply = second_response.choices[0].message
+
+        # Preserve second assistant message too
+        messages.append({
+            "role": "assistant",
+            "content": second_reply.content
+        })
+
+        print(second_reply.content)
+    else:
+        print(reply.content)
+
     
-    if len(input_msg) > 12:
-        input_msg = input_msg[-12:]
-    execute_AI_tool(reply)
+    # if len(messages) > 12:
+    #     messages = messages[-12:]
+    # execute_AI_tool(reply)
     # print(f"finalll response {final_response}")
     # final_reply = final_response.choices[0].message
-    # input_msg.append(final_reply)
+    # messages.append(final_reply)
     # print(f"testing response {final_response.choices[0].message}")
     # if final_response.choices[0].message.content is None:
     #     print("message is None")
-    input_msg.append({
-        "role": "assistant",
-        "content": reply.content
-    })
-    print(reply.content)
+    # messages.append({
+    #     "role": "assistant",
+    #     "content": reply.content
+    # })
+    # print(reply.content)
