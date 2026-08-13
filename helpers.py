@@ -5,7 +5,7 @@ import json
 import toolHelpers
 import utilities
 
-TOOLS_EXECUTE_TIME_LIMIT = 10
+TOOLS_EXECUTE_TRIES_LIMIT = 10
 def execute_AI_tool(tool_calls: List[ChatCompletionMessageToolCall]) -> None:
     for tool in tool_calls:
         function = toolHelpers.available_tools[tool.function.name]

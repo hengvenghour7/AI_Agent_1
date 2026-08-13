@@ -8,7 +8,7 @@ from pathlib import Path
 from groq.types.chat import ChatCompletionMessage, ChatCompletionMessageToolCall
 from utilities import messages
 import toolHelpers
-from helpers import execute_AI_tool, TOOLS_EXECUTE_TIME_LIMIT, increase_a
+from helpers import execute_AI_tool, TOOLS_EXECUTE_TRIES_LIMIT, increase_a
 
 load_dotenv()
 CURRENT_DIR = Path.cwd().resolve()
@@ -55,10 +55,13 @@ while True:
 
     messages.append(assistant_message)  
 
-        
-    if reply.tool_calls:
+    index:int = 1
+    for _ in range(TOOLS_EXECUTE_TRIES_LIMIT):
+        if not reply.tool_calls:
+            break
+
         result = execute_AI_tool(reply.tool_calls)
-        
+    
         # Ask the AI what to say after seeing the tool result
         try:
             second_response = client.chat.completions.create(
@@ -66,13 +69,15 @@ while True:
                 messages=messages,
                 tools=toolHelpers.tools
             )
+            print(f"tool call attempt {index}")
         except Exception as e:
             print(f"Second request error: {e}")
             continue
+        index += 1
 
         second_reply = second_response.choices[0].message
-
         # Preserve second assistant message too
+        reply = second_reply
         messages.append({
             "role": "assistant",
             "content": second_reply.content
