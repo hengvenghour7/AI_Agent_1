@@ -6,18 +6,15 @@ import os
 import json
 from pathlib import Path
 from groq.types.chat import ChatCompletionMessage, ChatCompletionMessageToolCall
-from utilities import messages
+from utilities import messages, AIPlatformsType
 import allTools
 from toolsDescriptions import tools
-from helpers import execute_AI_tool, TOOLS_EXECUTE_TRIES_LIMIT, increase_a
+from helpers import execute_AI_tool, TOOLS_EXECUTE_TRIES_LIMIT, increase_a, create_AI_response
 
 load_dotenv()
 CURRENT_DIR = Path.cwd().resolve()
 
-client = Groq(
-    api_key=os.getenv("GROQ_API_KEY")
-)
-
+AI_choice: AIPlatformsType = AIPlatformsType.Ollama_T
 
 
 while True:
@@ -28,15 +25,11 @@ while True:
         "content": user_input
     })
     try:
-        new_response = client.chat.completions.create(
-            model="openai/gpt-oss-20b",
-            messages=messages,
-            tools=tools
-        )
+        new_response = create_AI_response(AI_choice)
     except Exception as e:
         print(f"Prompt error {e}")
         continue
-    reply = new_response.choices[0].message
+    reply = new_response.message
 
     assistant_message = {
         "role": "assistant",
@@ -46,7 +39,7 @@ while True:
     if reply.tool_calls:
         assistant_message["tool_calls"] = [
             {
-                "id": tool.id,
+                # "id": tool.id,
                 "type": "function",
                 "function": {
                     "name": tool.function.name,
@@ -67,18 +60,14 @@ while True:
     
         # Ask the AI what to say after seeing the tool result
         try:
-            second_response = client.chat.completions.create(
-                model="openai/gpt-oss-20b",
-                messages=messages,
-                tools=allTools
-            )
+            second_response = create_AI_response(AI_choice)
             print(f"tool call attempt {index}")
         except Exception as e:
             print(f"Second request error: {e}")
             continue
         index += 1
 
-        second_reply = second_response.choices[0].message
+        second_reply = second_response.message
         # Preserve second assistant message too
         reply = second_reply
         messages.append({

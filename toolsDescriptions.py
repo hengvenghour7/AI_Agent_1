@@ -73,13 +73,12 @@ tools = [
             "name": "write_multiple_files",
             "description": """Write multiple files to disk.
 
-                Each file is represented by an object containing:
+                Each file contains:
                 - file_path: the path of the file
-                - content: the complete text content of the file
+                - content: the complete contents of the file
 
-                The content must be passed as a JSON string. Preserve the exact
-                contents requested by the user, including newlines, quotes, and
-                backslashes. Properly escape characters required by JSON.""",
+                Preserve the file content exactly, including newlines, quotes,
+                backslashes, tabs, and other characters.""",
             "parameters": {
                 "type": "object",
                 "properties": {
