@@ -1,6 +1,0 @@
-#include "enemy.h"
-#include <string.h>
-
-void init_enemy(Enemy *e, const char *name) {
-    strncpy(e->name, name, sizeof(e->name)-1);
-    e->name[??];?;??
