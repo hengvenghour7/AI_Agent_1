@@ -12,7 +12,8 @@ void battle(Player *p, Enemy *e) {
             int choice;
             if (scanf("%d", &choice) != 1) {
                 // consume invalid input
-                int c; while ((c = getchar()) != '\n' && c != EOF); continue;
+                int c; while ((c = getchar()) != '\n' && c != EOF) {}
+                continue;
             }
             switch (choice) {
                 case 1: {
