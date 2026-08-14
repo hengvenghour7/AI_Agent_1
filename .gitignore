@@ -1,4 +1,4 @@
 .env
-./newGame
-.pyc
-./__pycahe__
+newGame/
+*.pyc
+__pycache__/

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, TypedDict
 
 from groq import Groq
 from dotenv import load_dotenv
@@ -7,7 +7,8 @@ import json
 from pathlib import Path
 from groq.types.chat import ChatCompletionMessage, ChatCompletionMessageToolCall
 from utilities import messages
-import toolHelpers
+import allTools
+from toolsDescriptions import tools
 from helpers import execute_AI_tool, TOOLS_EXECUTE_TRIES_LIMIT, increase_a
 
 load_dotenv()
@@ -16,6 +17,8 @@ CURRENT_DIR = Path.cwd().resolve()
 client = Groq(
     api_key=os.getenv("GROQ_API_KEY")
 )
+
+
 
 while True:
     user_input = input("User input: ")
@@ -28,7 +31,7 @@ while True:
         new_response = client.chat.completions.create(
             model="openai/gpt-oss-20b",
             messages=messages,
-            tools=toolHelpers.tools
+            tools=tools
         )
     except Exception as e:
         print(f"Prompt error {e}")
@@ -67,7 +70,7 @@ while True:
             second_response = client.chat.completions.create(
                 model="openai/gpt-oss-20b",
                 messages=messages,
-                tools=toolHelpers.tools
+                tools=allTools
             )
             print(f"tool call attempt {index}")
         except Exception as e:
@@ -84,8 +87,8 @@ while True:
         })
 
         print(second_reply.content)
-    else:
-        print(reply.content)
+
+    print(reply.content)
 
     
     # if len(messages) > 12:

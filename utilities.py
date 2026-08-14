@@ -1,3 +1,11 @@
+from typing import TypedDict, List
+class FileInfo(TypedDict):
+    file_path: str
+    content: str
+available_paths: List[str] = [
+    "./"
+    "/Users/venghour/Documents/Coding/Games/Office_gangstar"
+]
 messages = [
     {
         "role": "system",
