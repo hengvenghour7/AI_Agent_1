@@ -36,5 +36,11 @@ def create_AI_response(AIPlatform: AIPlatformsType):
                 )
     return response
 
+def get_AI_message(AIPlatform: AIPlatformsType, response):
+    if AIPlatform == AIPlatformsType.Groq_T:
+        return response.choices[0].message
+    if AIPlatform == AIPlatformsType.Ollama_T:
+        return response.message
+
 def increase_a():
     utilities.a += 3
