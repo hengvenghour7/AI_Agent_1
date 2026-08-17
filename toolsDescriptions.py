@@ -106,5 +106,23 @@ tools = [
                 "additionalProperties": False
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_all_files_name_in_dir",
+            "description": "get the name of all files inside the directory",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "dir_path": {
+                        "type": "string",
+                        "description": "folder path"
+                    }
+                },
+                "required": ["dir_path"],
+                "additionalProperties": False
+            }
+        }
     }
 ]

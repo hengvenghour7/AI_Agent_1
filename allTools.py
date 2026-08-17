@@ -1,6 +1,7 @@
 from pathlib import Path
 from utilities import FileInfo
 from typing import List
+import os
 
 CURRENT_DIR = Path.cwd().resolve()
 
@@ -27,11 +28,15 @@ def write_multiple_files(file_infos: List[FileInfo]) -> str:
             f.write(info["content"])
     print("All files has been written")
     return "All files has been written"
+def get_all_files_name_in_dir(dir_path: str) -> list[str]:
+    all_files = os.listdir(dir_path)
+    return all_files
 
 available_tools = {
     "read_file": read_file,
     "friendly_reminder": friendly_reminder,
     "banner_is": banner_is,
     "write_file": write_file,
-    "write_multiple_files": write_multiple_files
+    "write_multiple_files": write_multiple_files,
+    "get_all_files_name_in_dir": get_all_files_name_in_dir
 }
