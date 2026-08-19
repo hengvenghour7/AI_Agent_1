@@ -9,6 +9,8 @@ typedef struct {
     int health;
     int hunger; // 0-100
     int stamina;
+    int food_inventory; // number of food items collected
+    int distance; // remaining distance to destination (unused in current logic)
 } Player;
 
 void init_player(Player *p);
