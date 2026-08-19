@@ -27,6 +27,7 @@ messages = [
         - read_file: return what contain inside the file
         - write_file: writing and replacing text into file
         - write_multiple_files: writing and replacing multiple files at once
+        - append_file: add new content to the file existing content
         - get_all_files_name_in_dir: get file available inside the directory
 
         Rules:

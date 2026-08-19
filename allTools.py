@@ -28,6 +28,11 @@ def write_multiple_files(file_infos: List[FileInfo]) -> str:
             f.write(info["content"])
     print("All files has been written")
     return "All files has been written"
+def append_file(file_path, content) -> str:
+    with open(file_path, "a") as f:
+        f.write("\n" + content)
+        print("file has been appended")
+        return "Append file"
 def get_all_files_name_in_dir(dir_path: str) -> list[str]:
     all_files = os.listdir(dir_path)
     return all_files
@@ -38,5 +43,6 @@ available_tools = {
     "banner_is": banner_is,
     "write_file": write_file,
     "write_multiple_files": write_multiple_files,
+    "append_file": append_file,
     "get_all_files_name_in_dir": get_all_files_name_in_dir
 }

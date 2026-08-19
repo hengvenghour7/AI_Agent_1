@@ -11,14 +11,15 @@ import allTools
 from toolsDescriptions import tools
 from helpers import (execute_AI_tool, TOOLS_EXECUTE_TRIES_LIMIT, increase_a, 
 create_AI_response, get_AI_message)
+from allTools import append_file
 
 load_dotenv()
 CURRENT_DIR = Path.cwd().resolve()
 
 AI_choice: AIPlatformsType = AIPlatformsType.Ollama_T
 
-
 while True:
+    print("_______________________\n")
     user_input = input("User input: ")
     print("_______________________")
     messages.append({

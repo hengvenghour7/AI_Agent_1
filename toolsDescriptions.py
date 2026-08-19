@@ -124,5 +124,30 @@ tools = [
                 "additionalProperties": False
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "append_file",
+            "description": """
+                add new content to the file existing content. If new content added to existing one,
+                it is reccomended to use this tool.
+            """,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "The path to the file to write."
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "new text to write into file."
+                    },
+                },
+                "required": ["file_path", "content"],
+                "additionalProperties": False
+            }
+        }
     }
 ]
